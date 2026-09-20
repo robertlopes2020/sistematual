@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediFlow - Sistema de Atendimento Hospitalar</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --secondary: #0f172a;
+      --bg-slate: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      
+      /* Manchester Triage Colors */
+      --red: #dc2626;
+      --orange: #f97316;
+      --yellow: #eab308;
+      --green: #16a34a;
+      --blue: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-slate);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout Structure */
+    .app-container {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 260px;
+      background-color: var(--secondary);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .brand {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .brand-icon {
+      background: var(--primary);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .brand-text span {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .nav-menu {
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex-grow: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.85rem 1rem;
+      color: #94a3b8;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background-color: #1e293b;
+      color: #ffffff;
+    }
+
+    .nav-item.active {
+      background-color: var(--primary);
+    }
+
+    .nav-item .badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    .sidebar-footer {
+      padding: 1rem;
+      font-size: 0.75rem;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow-y: auto;
+    }
+
+    .top-bar {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .page-title h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .page-title p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .content-body {
+      padding: 2rem;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .kpi-data h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .kpi-data p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Manchester Legend Cards */
+    .manchester-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .m-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid var(--border-color);
+      border-left: 5px solid var(--border-color);
+    }
+
+    .m-card.vermelho { border-left-color: var(--red); }
+    .m-card.laranja { border-left-color: var(--orange); }
+    .m-card.amarelo { border-left-color: var(--yellow); }
+    .m-card.verde { border-left-color: var(--green); }
+    .m-card.azul { border-left-color: var(--blue); }
+
+    .m-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .m-count {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-top: 0.25rem;
+    }
+
+    /* Cards & Forms */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input, select, textarea {
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+      width: 100%;
+      background: #fff;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Manchester Selector Options */
+    .triage-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .triage-option {
+      border: 2px solid var(--border-color);
+      padding: 0.85rem;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.3rem;
+      transition: all 0.2s;
+    }
+
+    .triage-option input {
+      display: none;
+    }
+
+    .triage-color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .triage-option.selected {
+      border-color: var(--secondary);
+      background-color: var(--bg-slate);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      justify-content: center;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    
+    .btn-success { background: var(--green); color: white; }
+    .btn-success:hover:not(:disabled) { filter: brightness(0.9); }
+
+    .btn-warning { background: var(--yellow); color: #78350f; }
+    .btn-warning:hover:not(:disabled) { filter: brightness(0.9); }
+
+    .btn-danger { background: #be185d; color: white; }
+    .btn-danger:hover:not(:disabled) { filter: brightness(0.9); }
+
+    .btn-secondary { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-secondary:hover:not(:disabled) { background: #e2e8f0; }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--bg-slate);
+      padding: 0.85rem 1rem;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Estilos de Paginação */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1rem;
+      margin-top: 0.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .pagination-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .badge-triage {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: white;
+    }
+
+    .badge-triage.vermelho { background: var(--red); }
+    .badge-triage.laranja { background: var(--orange); }
+    .badge-triage.amarelo { background: var(--yellow); color: #78350f; }
+    .badge-triage.verde { background: var(--green); }
+    .badge-triage.azul { background: var(--blue); }
+
+    .badge-status {
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    .status-aguardando { background: #fef3c7; color: #92400e; }
+    .status-chamado { background: #fed7aa; color: #9a3412; animation: pulse 1s infinite alternate; }
+    .status-atendimento { background: #e0e7ff; color: #3730a3; }
+    .status-finalizado { background: #dcfce7; color: #166534; }
+    .status-internado { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+
+    @keyframes pulse {
+      from { opacity: 1; }
+      to { opacity: 0.6; }
+    }
+
+    /* Modal Estilos */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #fff;
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Print Template Styles (@media print) */
+    #print-sheet {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+
+      body * {
+        visibility: hidden;
+      }
+
+      #print-sheet, #print-sheet * {
+        visibility: visible;
+      }
+
+      #print-sheet {
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        font-family: Arial, sans-serif;
+      }
+
+      .print-header {
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+      }
+
+      .print-header h1 {
+        font-size: 16pt;
+        margin-bottom: 2px;
+      }
+
+      .print-section {
+        margin-bottom: 15px;
+        border: 1px solid #000;
+        padding: 10px;
+        border-radius: 4px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .print-section h3 {
+        font-size: 11pt;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .print-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        font-size: 10pt;
+      }
+
+      .prescription-box {
+        min-height: 220px;
+        border: 1px dashed #666;
+        margin-top: 10px;
+        padding: 10px;
+      }
+
+      .signature-area {
+        margin-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .signature-line {
+        width: 45%;
+        border-top: 1px solid #000;
+        padding-top: 5px;
+        font-size: 9pt;
+      }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--secondary);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 99;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Styles para Painel TV / Segunda Aba */
+    body.display-mode {
+      background-color: #0b1329;
+      color: #ffffff;
+      padding: 0;
+      margin: 0;
+      display: block;
+    }
+
+    .display-header {
+      background-color: #1e293b;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .display-header h1 {
+      font-size: 2rem;
+      color: #38bdf8;
+    }
+
+    .display-callout {
+      background: linear-gradient(135deg, #1e3a8a, #0284c7);
+      margin: 1.5rem 2rem;
+      padding: 2rem;
+      border-radius: 16px;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+      text-align: center;
+      animation: pulseDisplay 1.5s infinite alternate;
+    }
+
+    @keyframes pulseDisplay {
+      0% { transform: scale(0.99); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+      100% { transform: scale(1.01); box-shadow: 0 0 30px rgba(56, 189, 248, 0.9); }
+    }
+
+    .display-callout h2 {
+      font-size: 1.2rem;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .display-callout .patient-name {
+      font-size: 3.2rem;
+      font-weight: 900;
+      margin: 0.5rem 0;
+      color: #ffffff;
+    }
+
+    .display-callout .patient-info {
+      font-size: 1.4rem;
+      color: #e0f2fe;
+    }
+
+    .display-container {
+      padding: 0 2rem 2rem 2rem;
+    }
+
+    .display-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 0.75rem;
+    }
+
+    .display-table th {
+      background: transparent;
+      color: #94a3b8;
+      font-size: 1rem;
+      padding: 1rem;
+      border: none;
+    }
+
+    .display-table td {
+      background: #1e293b;
+      padding: 1.25rem;
+      font-size: 1.2rem;
+      border: none;
+    }
+
+    .display-table tr td:first-child {
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+    }
+
+    .display-table tr td:last-child {
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+
+    /* Responsive adjustment */
+    @media (max-width: 768px) {
+      .app-container { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .top-bar { padding: 1rem; }
+      .content-body { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container" id="app-view">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">✚</div>
+        <div class="brand-text">
+          <h1>HRLM</h1>
+          <span>Pronto Atendimento</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" onclick="switchTab('dashboard')">
+          <span>📊</span> Painel Geral
+        </button>
+        <button class="nav-item" onclick="switchTab('triagem')">
+          <span>📋</span> Nova Triagem
+        </button>
+        <button class="nav-item" onclick="switchTab('fila')">
+          <span>⏳</span> Fila de Espera
+          <span class="badge" id="queue-badge-count">0</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('pacientes')">
+          <span>👥</span> Pacientes
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <strong>Hospital Central</strong><br>
+        Protocolo Manchester v2.4
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <header class="top-bar">
+        <div class="page-title">
+          <h2 id="current-page-title">Painel Geral</h2>
+          <p id="current-page-subtitle">Acompanhamento e estatísticas em tempo real</p>
+        </div>
+
+        <div class="user-profile">
+          <button class="btn btn-secondary" onclick="openDisplayWindow()" style="background: #0f172a; color: #38bdf8; border-color: #334155;">
+            📺 Abrir Painel TV (Sala de Espera)
+          </button>
+          <div class="avatar">EN</div>
+          <div>
+            <strong style="font-size: 0.85rem; display: block;">Enf. Sarah Santos</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Triagem & Admissão</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-body">
+        
+        <div id="tab-dashboard" class="tab-view active">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon" style="background: #e0f2fe; color: #0284c7;">👥</div>
+              <div class="kpi-data">
+                <h3 id="kpi-total-today">0</h3>
+                <p>Atendimentos Hoje</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="background: #fef3c7; color: #d97706;">⏳</div>
+              <div class="kpi-data">
+                <h3 id="kpi-waiting">0</h3>
+                <p>Aguardando</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">🩺</div>
+              <div class="kpi-data">
+                <h3 id="kpi-in-consult">0</h3>
+                <p>Em Atendimento</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="background: #fce7f3; color: #9d174d;">🏥</div>
+              <div class="kpi-data">
+                <h3 id="kpi-interned">0</h3>
+                <p>Internados</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon" style="background: #dcfce7; color: #15803d;">✅</div>
+              <div class="kpi-data">
+                <h3 id="kpi-finished">0</h3>
+                <p>Finalizados</p>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 1rem; margin-bottom: 0.75rem; font-weight: 700;">Distribuição Atual por Gravidade (Manchester)</h3>
+          <div class="manchester-grid">
+            <div class="m-card vermelho">
+              <div class="m-title" style="color: var(--red);">Emergência</div>
+              <div class="m-count" id="count-vermelho">0</div>
+            </div>
+            <div class="m-card laranja">
+              <div class="m-title" style="color: var(--orange);">Muito Urgente</div>
+              <div class="m-count" id="count-laranja">0</div>
+            </div>
+            <div class="m-card amarelo">
+              <div class="m-title" style="color: #b45309;">Urgente</div>
+              <div class="m-count" id="count-amarelo">0</div>
+            </div>
+            <div class="m-card verde">
+              <div class="m-title" style="color: var(--green);">Pouco Urgente</div>
+              <div class="m-count" id="count-verde">0</div>
+            </div>
+            <div class="m-card azul">
+              <div class="m-title" style="color: var(--blue);">Não Urgente</div>
+              <div class="m-count" id="count-azul">0</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Últimos Cadastrados / Atualizados</span>
+              <button class="btn btn-secondary" onclick="switchTab('fila')">Ver Fila Completa →</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Horário</th>
+                    <th>Paciente</th>
+                    <th>Classificação</th>
+                    <th>Especialidade</th>
+                    <th>Status / Local</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-table">
+                  <!-- JS Injected -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-triagem" class="tab-view">
+          <form id="triage-form" onsubmit="handleSaveTriage(event)">
+            <div class="card">
+              <div class="card-title">1. Dados de Identificação do Paciente</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Nome Completo *</label>
+                  <input type="text" id="p-name" required placeholder="Ex: Maria das Graças Silva">
+                </div>
+                <div class="form-group">
+                  <label>Nome da Mãe *</label>
+                  <input type="text" id="p-mother" required placeholder="Ex: Ana Lima das Graças">
+                </div>
+                <div class="form-group">
+                  <label>Nome do Pai (Opcional)</label>
+                  <input type="text" id="p-father" placeholder="Ex: José Carlos Silva">
+                </div>
+                <div class="form-group">
+                  <label>CPF *</label>
+                  <input type="text" id="p-cpf" required placeholder="000.000.000-00">
+                </div>
+                <div class="form-group">
+                  <label>Cartão do SUS (CNS)</label>
+                  <input type="text" id="p-sus" placeholder="000 0000 0000 0000">
+                </div>
+                <div class="form-group">
+                  <label>Data de Nascimento *</label>
+                  <input type="date" id="p-dob" required>
+                </div>
+                <div class="form-group">
+                  <label>Telefone</label>
+                  <input type="text" id="p-phone" placeholder="(86) 99999-0000">
+                </div>
+                <div class="form-group">
+                  <label>Sexo Biológico</label>
+                  <select id="p-gender">
+                    <option value="Feminino">Feminino</option>
+                    <option value="Masculino">Masculino</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Plano / Convênio</label>
+                  <select id="p-insurance">
+                    <option value="SUS">SUS</option>
+                    <option value="Unimed">Unimed</option>
+                    <option value="Bradesco Saúde">Bradesco Saúde</option>
+                    <option value="Particular">Particular</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Endereço do Paciente -->
+              <div style="margin-top: 1.25rem;">
+                <label style="display: block; margin-bottom: 0.75rem; font-weight: 800; border-top: 1px dashed var(--border-color); padding-top: 1rem;">Endereço Residencial</label>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Rua / Logradouro</label>
+                    <input type="text" id="p-street" placeholder="Ex: Av. Brasil">
+                  </div>
+                  <div class="form-group">
+                    <label>Número</label>
+                    <input type="text" id="p-number" placeholder="Ex: 123 ou S/N">
+                  </div>
+                  <div class="form-group">
+                    <label>Bairro</label>
+                    <input type="text" id="p-neighborhood" placeholder="Ex: Centro">
+                  </div>
+                  <div class="form-group">
+                    <label>Cidade</label>
+                    <input type="text" id="p-city" placeholder="Ex: Teresina">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">2. Triagem e Sinais Vitais</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Pressão Arterial (PA)</label>
+                  <input type="text" id="v-bp" placeholder="120/80 mmHg">
+                </div>
+                <div class="form-group">
+                  <label>Freq. Cardíaca (BPM)</label>
+                  <input type="number" id="v-hr" placeholder="80">
+                </div>
+                <div class="form-group">
+                  <label>Temperatura (°C)</label>
+                  <input type="number" step="0.1" id="v-temp" placeholder="36.5">
+                </div>
+                <div class="form-group">
+                  <label>Saturação O2 (%)</label>
+                  <input type="number" id="v-o2" placeholder="98">
+                </div>
+                <div class="form-group">
+                  <label>Escala de Dor (1-10)</label>
+                  <input type="number" min="0" max="10" id="v-pain" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label>Encaminhamento / Especialidade *</label>
+                  <select id="v-specialty" required>
+                    <option value="Clínica Médica">Clínica Médica</option>
+                    <option value="Pediatria">Pediatria</option>
+                    <option value="Ortopedia">Ortopedia</option>
+                    <option value="Cardiologia">Cardiologia</option>
+                    <option value="Cirurgia Geral">Cirurgia Geral</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Status Inicial</label>
+                  <select id="v-status" onchange="toggleBedField(this.value, 'v-bed-group')">
+                    <option value="AGUARDANDO">Aguardando na Fila</option>
+                    <option value="INTERNADO">Paciente Internado</option>
+                  </select>
+                </div>
+
+                <div class="form-group" id="v-bed-group" style="display: none;">
+                  <label>Setor / Leito de Internação</label>
+                  <input type="text" id="v-bed" placeholder="Ex: Enfermaria A - Leito 04">
+                </div>
+
+                <div class="form-group full-width">
+                  <label>Queixa Principal / Sintomas Relatados *</label>
+                  <textarea id="v-complaint" rows="3" required placeholder="Descreva os sintomas do paciente..."></textarea>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem;">
+                <label>Classificação de Risco (Manchester) *</label>
+                <div class="triage-selector">
+                  <label class="triage-option" onclick="selectTriage(event, 'vermelho')">
+                    <input type="radio" name="triage" value="vermelho" required>
+                    <div class="triage-color-dot" style="background: var(--red);"></div>
+                    <strong style="font-size: 0.85rem;">VERMELHO</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Emergência (0 min)</span>
+                  </label>
+
+                  <label class="triage-option" onclick="selectTriage(event, 'laranja')">
+                    <input type="radio" name="triage" value="laranja">
+                    <div class="triage-color-dot" style="background: var(--orange);"></div>
+                    <strong style="font-size: 0.85rem;">LARANJA</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Muito Urgente (10 min)</span>
+                  </label>
+
+                  <label class="triage-option selected" onclick="selectTriage(event, 'amarelo')">
+                    <input type="radio" name="triage" value="amarelo" checked>
+                    <div class="triage-color-dot" style="background: var(--yellow);"></div>
+                    <strong style="font-size: 0.85rem;">AMARELO</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Urgente (60 min)</span>
+                  </label>
+
+                  <label class="triage-option" onclick="selectTriage(event, 'verde')">
+                    <input type="radio" name="triage" value="verde">
+                    <div class="triage-color-dot" style="background: var(--green);"></div>
+                    <strong style="font-size: 0.85rem;">VERDE</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Pouco Urgente (120 min)</span>
+                  </label>
+
+                  <label class="triage-option" onclick="selectTriage(event, 'azul')">
+                    <input type="radio" name="triage" value="azul">
+                    <div class="triage-color-dot" style="background: var(--blue);"></div>
+                    <strong style="font-size: 0.85rem;">AZUL</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Não Urgente (240 min)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem; text-align: right;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.85rem 2rem;">
+                  💾 Salvar Atendimento
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div id="tab-fila" class="tab-view">
+          <div class="card">
+            <div class="card-title">
+              <span>Fila de Espera em Tempo Real</span>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="queue-search" placeholder="Buscar por nome, mãe, pai, CPF, bairro ou cidade..." onkeyup="resetQueuePageAndRender()" style="width: 320px;">
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Gravidade</th>
+                    <th>Chegada</th>
+                    <th>Paciente / Filiação / Documentos</th>
+                    <th>Endereço</th>
+                    <th>Especialidade</th>
+                    <th>Status / Local</th>
+                    <th style="text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="queue-table-body">
+                  <!-- JS Injected -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Paginação da Fila de Espera -->
+            <div class="pagination-container">
+              <div class="pagination-info" id="queue-pagination-info">Mostrando 0-0 de 0 registros</div>
+              <div class="pagination-controls">
+                <button class="btn btn-secondary" id="queue-prev-btn" onclick="changeQueuePage(-1)">← Anterior</button>
+                <span id="queue-page-num" style="font-size:0.85rem; font-weight:700;">Página 1</span>
+                <button class="btn btn-secondary" id="queue-next-btn" onclick="changeQueuePage(1)">Próximo →</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div id="tab-pacientes" class="tab-view">
+          <div class="card">
+            <div class="card-title">
+              <span>Cadastro & Situação de Pacientes</span>
+              <input type="text" id="patient-search" placeholder="Buscar por nome, CPF, cidade ou status..." onkeyup="resetPatientsPageAndRender()" style="width: 300px;">
+            </div>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Paciente</th>
+                    <th>Filiação (Mãe / Pai)</th>
+                    <th>CPF / Cartão SUS</th>
+                    <th>Situação / Internação</th>
+                    <th>Endereço Completo</th>
+                    <th>Telefone</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="patients-table-body">
+                  <!-- JS Injected -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Paginação da Lista de Pacientes -->
+            <div class="pagination-container">
+              <div class="pagination-info" id="patient-pagination-info">Mostrando 0-0 de 0 registros</div>
+              <div class="pagination-controls">
+                <button class="btn btn-secondary" id="patient-prev-btn" onclick="changePatientPage(-1)">← Anterior</button>
+                <span id="patient-page-num" style="font-size:0.85rem; font-weight:700;">Página 1</span>
+                <button class="btn btn-secondary" id="patient-next-btn" onclick="changePatientPage(1)">Próximo →</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Estrutura do Painel TV (Sala de Espera) -->
+  <div id="display-view" style="display: none; width: 100%;">
+    <div class="display-header">
+      <h1>HOSPITAL CENTRAL - PAINEL DE ATENDIMENTO</h1>
+      <span id="display-clock" style="font-size: 1.5rem; font-weight: bold; color: #94a3b8;">00:00:00</span>
+    </div>
+
+    <div id="display-callout" class="display-callout">
+      <h2>📢 PACIENTE CHAMADO</h2>
+      <div id="callout-name" class="patient-name">PACIENTE</div>
+      <div id="callout-info" class="patient-info">Consultório 01 - Clínica Médica</div>
+    </div>
+
+    <div class="display-container">
+      <h2 style="margin: 1.5rem 0 1rem 0; font-size: 1.4rem; color: #94a3b8;">⏳ PACIENTES AGUARDANDO ATENDIMENTO (ORDEM DE CHEGADA)</h2>
+      <table class="display-table">
+        <thead>
+          <tr>
+            <th>HORÁRIO</th>
+            <th>NOME DO PACIENTE</th>
+            <th>GRAVIDADE</th>
+            <th>ESPECIALIDADE</th>
+          </tr>
+        </thead>
+        <tbody id="display-queue-body">
+          <!-- JS Injected -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div id="edit-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="card-title">
+        <span id="modal-title-text">✏️ Editar Atendimento / Internação</span>
+        <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem;" onclick="closeEditModal()">✕ Fechar</button>
+      </div>
+      <form id="edit-form" onsubmit="handleUpdateTriage(event)">
+        <input type="hidden" id="edit-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nome Completo *</label>
+            <input type="text" id="edit-p-name" required>
+          </div>
+          <div class="form-group">
+            <label>Nome da Mãe *</label>
+            <input type="text" id="edit-p-mother" required>
+          </div>
+          <div class="form-group">
+            <label>Nome do Pai (Opcional)</label>
+            <input type="text" id="edit-p-father" placeholder="Ex: José Carlos Silva">
+          </div>
+          <div class="form-group">
+            <label>CPF *</label>
+            <input type="text" id="edit-p-cpf" required>
+          </div>
+          <div class="form-group">
+            <label>Cartão do SUS (CNS)</label>
+            <input type="text" id="edit-p-sus">
+          </div>
+          <div class="form-group">
+            <label>Data de Nascimento *</label>
+            <input type="date" id="edit-p-dob" required>
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="edit-p-phone">
+          </div>
+          <div class="form-group">
+            <label>Sexo Biológico</label>
+            <select id="edit-p-gender">
+              <option value="Feminino">Feminino</option>
+              <option value="Masculino">Masculino</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Plano / Convênio</label>
+            <select id="edit-p-insurance">
+              <option value="SUS">SUS</option>
+              <option value="Unimed">Unimed</option>
+              <option value="Bradesco Saúde">Bradesco Saúde</option>
+              <option value="Particular">Particular</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Endereço Modal Edição -->
+        <div style="margin-top: 1rem; margin-bottom: 1rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 800;">Endereço Residencial</label>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Rua / Logradouro</label>
+              <input type="text" id="edit-p-street">
+            </div>
+            <div class="form-group">
+              <label>Número</label>
+              <input type="text" id="edit-p-number">
+            </div>
+            <div class="form-group">
+              <label>Bairro</label>
+              <input type="text" id="edit-p-neighborhood">
+            </div>
+            <div class="form-group">
+              <label>Cidade</label>
+              <input type="text" id="edit-p-city">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Pressão Arterial (PA)</label>
+            <input type="text" id="edit-v-bp">
+          </div>
+          <div class="form-group">
+            <label>Freq. Cardíaca (BPM)</label>
+            <input type="number" id="edit-v-hr">
+          </div>
+          <div class="form-group">
+            <label>Temperatura (°C)</label>
+            <input type="number" step="0.1" id="edit-v-temp">
+          </div>
+          <div class="form-group">
+            <label>Saturação O2 (%)</label>
+            <input type="number" id="edit-v-o2">
+          </div>
+          <div class="form-group">
+            <label>Escala de Dor (1-10)</label>
+            <input type="number" min="0" max="10" id="edit-v-pain">
+          </div>
+          <div class="form-group">
+            <label>Encaminhamento / Especialidade *</label>
+            <select id="edit-v-specialty" required>
+              <option value="Clínica Médica">Clínica Médica</option>
+              <option value="Pediatria">Pediatria</option>
+              <option value="Ortopedia">Ortopedia</option>
+              <option value="Cardiologia">Cardiologia</option>
+              <option value="Cirurgia Geral">Cirurgia Geral</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Classificação de Risco *</label>
+            <select id="edit-v-triage" required>
+              <option value="vermelho">VERMELHO - Emergência</option>
+              <option value="laranja">LARANJA - Muito Urgente</option>
+              <option value="amarelo">AMARELO - Urgente</option>
+              <option value="verde">VERDE - Pouco Urgente</option>
+              <option value="azul">AZUL - Não Urgente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status do Paciente *</label>
+            <select id="edit-v-status" onchange="toggleBedField(this.value, 'edit-bed-group')" required>
+              <option value="AGUARDANDO">AGUARDANDO</option>
+              <option value="CHAMADO">CHAMADO</option>
+              <option value="EM ATENDIMENTO">EM ATENDIMENTO</option>
+              <option value="INTERNADO">🏥 INTERNADO</option>
+              <option value="FINALIZADO">FINALIZADO</option>
+            </select>
+          </div>
+          <div class="form-group" id="edit-bed-group" style="display: none;">
+            <label>Setor / Leito de Internação</label>
+            <input type="text" id="edit-v-bed" placeholder="Ex: Enfermaria A - Leito 04">
+          </div>
+          <div class="form-group full-width">
+            <label>Queixa Principal / Sintomas Relatados *</label>
+            <textarea id="edit-v-complaint" rows="3" required></textarea>
+          </div>
+        </div>
+        <div style="margin-top: 1.5rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-modal">💾 Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Printable A4 Sheet -->
+  <div id="print-sheet">
+    <div class="print-header">
+      <h1>HOSPITAL CENTRAL - PRONTO SOCORRO</h1>
+      <p>FICHA DE ATENDIMENTO E TRIAGEM MÉDICA</p>
+    </div>
+
+    <div class="print-section">
+      <h3>Identificação do Atendimento</h3>
+      <div class="print-grid">
+        <div><strong>Protocolo:</strong> <span id="prt-id"></span></div>
+        <div><strong>Data de Atendimento:</strong> <span id="prt-date"></span></div>
+        <div><strong>Hora Chegada:</strong> <span id="prt-time"></span></div>
+        <div><strong>Paciente:</strong> <span id="prt-name"></span></div>
+        <div><strong>Nome da Mãe:</strong> <span id="prt-mother"></span></div>
+        <div><strong>Nome do Pai:</strong> <span id="prt-father"></span></div>
+        <div><strong>CPF:</strong> <span id="prt-cpf"></span></div>
+        <div><strong>Cartão SUS:</strong> <span id="prt-sus"></span></div>
+        <div><strong>Nascimento:</strong> <span id="prt-dob"></span></div>
+        <div><strong>Convênio:</strong> <span id="prt-insurance"></span></div>
+        <div><strong>Situação:</strong> <span id="prt-status"></span></div>
+        <div id="prt-bed-row" style="display:none; grid-column: span 2;"><strong>Setor / Leito:</strong> <span id="prt-bed"></span></div>
+        <div style="grid-column: span 2;"><strong>Endereço:</strong> <span id="prt-address"></span></div>
+      </div>
+    </div>
+
+    <div class="print-section">
+      <h3>Triagem de Manchester & Sinais Vitais</h3>
+      <div class="print-grid">
+        <div><strong>Classificação:</strong> <span id="prt-triage"></span></div>
+        <div><strong>Especialidade:</strong> <span id="prt-specialty"></span></div>
+        <div><strong>Pressão Arterial:</strong> <span id="prt-bp"></span></div>
+        <div><strong>Freq. Cardíaca:</strong> <span id="prt-hr"></span> bpm</div>
+        <div><strong>Temperatura:</strong> <span id="prt-temp"></span> °C</div>
+        <div><strong>Saturação O2:</strong> <span id="prt-o2"></span> %</div>
+      </div>
+      <div style="margin-top: 10px;">
+        <strong>Queixa Principal:</strong>
+        <p id="prt-complaint" style="margin-top: 4px; font-style: italic;"></p>
+      </div>
+    </div>
+
+    <div class="print-section">
+      <h3>Anotações Médicas / Prontuário</h3>
+      <div class="prescription-box">
+        <p style="color: #999; font-size: 9pt;">[ Espaço reservado para o médico plantonista ]</p>
+      </div>
+    </div>
+
+    <div class="signature-area">
+      <div class="signature-line">
+        Enfermagem (Triagem)
+      </div>
+      <div class="signature-line">
+        Médico Responsável (CRM)
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="toast">
+    <span id="toast-icon">🔔</span>
+    <span id="toast-message">Mensagem de notificação</span>
+  </div>
+
+  <script>
+    // Initial Mock Data
+    const INITIAL_ATTENDANCES = [
+      {
+        id: 'ATD-2026-102',
+        timestamp: Date.now() - 1000 * 60 * 30,
+        name: 'João Pedro Santos',
+        motherName: 'Mariana Pedro Santos',
+        fatherName: 'Carlos Eduardo Santos',
+        cpf: '987.654.321-11',
+        susCard: '700 1122 3344 5566',
+        dob: '1992-11-28',
+        phone: '(86) 98112-9900',
+        gender: 'Masculino',
+        insurance: 'Unimed',
+        street: 'Rua Flores',
+        number: '120',
+        neighborhood: 'São Cristóvão',
+        city: 'Teresina',
+        bp: '120/80',
+        hr: '76',
+        temp: '36.5',
+        o2: '98',
+        pain: '3',
+        specialty: 'Ortopedia',
+        complaint: 'Entorse leve no tornozelo direito.',
+        triage: 'verde',
+        status: 'AGUARDANDO',
+        bedLocation: '',
+        time: '09:30'
+      },
+      {
+        id: 'ATD-2026-101',
+        timestamp: Date.now() - 1000 * 60 * 60,
+        name: 'Maria das Graças Silva',
+        motherName: 'Ana Lima das Graças',
+        fatherName: '',
+        cpf: '123.456.789-00',
+        susCard: '898 0001 2345 6789',
+        dob: '1985-04-12',
+        phone: '(86) 99823-4411',
+        gender: 'Feminino',
+        insurance: 'SUS',
+        street: 'Av. Principal',
+        number: '45',
+        neighborhood: 'Centro',
+        city: 'Barras',
+        bp: '160/100',
+        hr: '105',
+        temp: '37.8',
+        o2: '94',
+        pain: '8',
+        specialty: 'Cardiologia',
+        complaint: 'Forte dor no peito irradiando para braço esquerdo.',
+        triage: 'vermelho',
+        status: 'INTERNADO',
+        bedLocation: 'UTI Cardiológica - Leito 02',
+        time: '08:15'
+      }
+    ];
+
+    // Broadcast Channel para Sincronização entre Abas
+    const channel = 'BroadcastChannel' in window ? new BroadcastChannel('mediflow_channel') : null;
+
+    // Estados Globais de Paginação
+    const PAGE_SIZE = 10;
+    let currentQueuePage = 1;
+    let currentPatientPage = 1;
+
+    // App State Initialization
+    let attendances = JSON.parse(localStorage.getItem('mediflow_attendances')) || INITIAL_ATTENDANCES;
+
+    function toggleBedField(statusValue, containerId) {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.style.display = statusValue === 'INTERNADO' ? 'flex' : 'none';
+      }
+    }
+
+    function openDisplayWindow() {
+      const url = window.location.href.split('?')[0] + '?mode=display';
+      window.open(url, '_blank');
+    }
+
+    function formatAddress(item) {
+      const parts = [
+        item.street ? `${item.street}${item.number ? ', ' + item.number : ''}` : '',
+        item.neighborhood ? item.neighborhood : '',
+        item.city ? item.city : ''
+      ].filter(Boolean);
+      return parts.length > 0 ? parts.join(' - ') : 'Não Informado';
+    }
+
+    function formatDateToBR(dateStr) {
+      if (!dateStr) return 'Não Informado';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    }
+
+    function saveState() {
+      const ids = new Set();
+      attendances = attendances.filter(a => {
+        if (ids.has(a.id)) return false;
+        ids.add(a.id);
+        return true;
+      });
+
+      attendances.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      localStorage.setItem('mediflow_attendances', JSON.stringify(attendances));
+      
+      if (channel) {
+        channel.postMessage({ type: 'UPDATE' });
+      }
+      
+      updateUI();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      
+      const titles = {
+        'dashboard': ['Painel Geral', 'Acompanhamento e estatísticas em tempo real'],
+        'triagem': ['Nova Triagem', 'Cadastro e classificação de risco do paciente'],
+        'fila': ['Fila de Espera', 'Gestão de chamadas e consultas'],
+        'pacientes': ['Histórico & Internação de Pacientes', 'Base de dados cadastrais e leitos ocupados']
+      };
+
+      document.getElementById('current-page-title').innerText = titles[tabId][0];
+      document.getElementById('current-page-subtitle').innerText = titles[tabId][1];
+
+      const navBtn = Array.from(document.querySelectorAll('.nav-item')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (navBtn) navBtn.classList.add('active');
+
+      updateUI();
+    }
+
+    function showToast(msg, icon = '🔔') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').innerText = msg;
+      document.getElementById('toast-icon').innerText = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    function selectTriage(e, color) {
+      document.querySelectorAll('.triage-option').forEach(el => el.classList.remove('selected'));
+      e.currentTarget.classList.add('selected');
+      const radio = e.currentTarget.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+    }
+
+    function handleSaveTriage(e) {
+      e.preventDefault();
+      
+      const newCpf = document.getElementById('p-cpf').value.trim();
+      const newSus = document.getElementById('p-sus').value.trim();
+
+      const existingPatient = attendances.find(a => {
+        const cpfMatch = a.cpf && a.cpf.trim() === newCpf;
+        const susMatch = newSus && a.susCard && a.susCard !== 'Não Informado' && a.susCard.trim() === newSus;
+        return cpfMatch || susMatch;
+      });
+
+      if (existingPatient) {
+        showToast(`Cadastro recusado! Este paciente já está cadastrado (${existingPatient.name}).`, '⚠️');
+        alert(`❌ Cadastro Recusado!\n\nJá existe um paciente cadastrado com este documento:\nNome: ${existingPatient.name}\nCPF: ${existingPatient.cpf}\nStatus Atual: ${existingPatient.status}`);
+        return; 
+      }
+
+      const selectedTriage = document.querySelector('input[name="triage"]:checked').value;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newId = 'ATD-' + now.getFullYear() + '-' + Math.floor(100 + Math.random() * 900);
+      const initialStatus = document.getElementById('v-status').value;
+
+      const newAttendance = {
+        id: newId,
+        timestamp: Date.now(),
+        name: document.getElementById('p-name').value,
+        motherName: document.getElementById('p-mother').value,
+        fatherName: document.getElementById('p-father').value || '',
+        cpf: newCpf,
+        susCard: newSus || 'Não Informado',
+        dob: document.getElementById('p-dob').value,
+        phone: document.getElementById('p-phone').value,
+        gender: document.getElementById('p-gender').value,
+        insurance: document.getElementById('p-insurance').value,
+        street: document.getElementById('p-street').value,
+        number: document.getElementById('p-number').value,
+        neighborhood: document.getElementById('p-neighborhood').value,
+        city: document.getElementById('p-city').value,
+        bp: document.getElementById('v-bp').value || 'N/I',
+        hr: document.getElementById('v-hr').value || 'N/I',
+        temp: document.getElementById('v-temp').value || 'N/I',
+        o2: document.getElementById('v-o2').value || 'N/I',
+        pain: document.getElementById('v-pain').value || '0',
+        specialty: document.getElementById('v-specialty').value,
+        complaint: document.getElementById('v-complaint').value,
+        triage: selectedTriage,
+        status: initialStatus,
+        bedLocation: initialStatus === 'INTERNADO' ? document.getElementById('v-bed').value : '',
+        time: timeStr
+      };
+
+      attendances.unshift(newAttendance);
+      currentQueuePage = 1;
+      saveState();
+
+      document.getElementById('triage-form').reset();
+      toggleBedField('AGUARDANDO', 'v-bed-group');
+      showToast('Atendimento registrado com sucesso!', '✅');
+      switchTab('fila');
+    }
+
+    function openEditModal(id, isRenewalMode = false) {
+      const item = attendances.find(a => a.id === id);
+      if (!item) return;
+
+      document.getElementById('modal-title-text').innerText = isRenewalMode 
+        ? '🔄 Renovar Atendimento (Novo Chamado)' 
+        : '✏️ Editar Atendimento / Internação';
+      
+      document.getElementById('btn-save-modal').innerText = isRenewalMode 
+        ? '🔄 Confirmar Novo Atendimento' 
+        : '💾 Salvar Alterações';
+
+      document.getElementById('edit-id').value = item.id;
+      document.getElementById('edit-p-name').value = item.name;
+      document.getElementById('edit-p-mother').value = item.motherName || '';
+      document.getElementById('edit-p-father').value = item.fatherName || '';
+      document.getElementById('edit-p-cpf').value = item.cpf;
+      document.getElementById('edit-p-sus').value = item.susCard !== 'Não Informado' ? item.susCard : '';
+      document.getElementById('edit-p-dob').value = item.dob;
+      document.getElementById('edit-p-phone').value = item.phone || '';
+      document.getElementById('edit-p-gender').value = item.gender;
+      document.getElementById('edit-p-insurance').value = item.insurance;
+      
+      document.getElementById('edit-p-street').value = item.street || '';
+      document.getElementById('edit-p-number').value = item.number || '';
+      document.getElementById('edit-p-neighborhood').value = item.neighborhood || '';
+      document.getElementById('edit-p-city').value = item.city || '';
+
+      if (isRenewalMode) {
+        document.getElementById('edit-v-bp').value = '';
+        document.getElementById('edit-v-hr').value = '';
+        document.getElementById('edit-v-temp').value = '';
+        document.getElementById('edit-v-o2').value = '';
+        document.getElementById('edit-v-pain').value = '0';
+        document.getElementById('edit-v-status').value = 'AGUARDANDO';
+        document.getElementById('edit-v-complaint').value = '';
+      } else {
+        document.getElementById('edit-v-bp').value = item.bp !== 'N/I' ? item.bp : '';
+        document.getElementById('edit-v-hr').value = item.hr !== 'N/I' ? item.hr : '';
+        document.getElementById('edit-v-temp').value = item.temp !== 'N/I' ? item.temp : '';
+        document.getElementById('edit-v-o2').value = item.o2 !== 'N/I' ? item.o2 : '';
+        document.getElementById('edit-v-pain').value = item.pain || '0';
+        document.getElementById('edit-v-status').value = item.status;
+        document.getElementById('edit-v-complaint').value = item.complaint;
+      }
+
+      document.getElementById('edit-v-specialty').value = item.specialty;
+      document.getElementById('edit-v-triage').value = item.triage;
+      document.getElementById('edit-v-bed').value = item.bedLocation || '';
+
+      toggleBedField(document.getElementById('edit-v-status').value, 'edit-bed-group');
+      document.getElementById('edit-modal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('active');
+    }
+
+    function handleUpdateTriage(e) {
+      e.preventDefault();
+
+      const oldId = document.getElementById('edit-id').value;
+      const editStatus = document.getElementById('edit-v-status').value;
+      const oldItem = attendances.find(a => a.id === oldId);
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const isRenewal = editStatus === 'AGUARDANDO';
+      const newTimestamp = isRenewal ? Date.now() : (oldItem?.timestamp || Date.now());
+      const newTime = isRenewal ? timeStr : (oldItem?.time || timeStr);
+
+      const updatedAttendance = {
+        id: oldId,
+        timestamp: newTimestamp,
+        name: document.getElementById('edit-p-name').value,
+        motherName: document.getElementById('edit-p-mother').value,
+        fatherName: document.getElementById('edit-p-father').value || '',
+        cpf: document.getElementById('edit-p-cpf').value,
+        susCard: document.getElementById('edit-p-sus').value || 'Não Informado',
+        dob: document.getElementById('edit-p-dob').value,
+        phone: document.getElementById('edit-p-phone').value,
+        gender: document.getElementById('edit-p-gender').value,
+        insurance: document.getElementById('edit-p-insurance').value,
+        street: document.getElementById('edit-p-street').value,
+        number: document.getElementById('edit-p-number').value,
+        neighborhood: document.getElementById('edit-p-neighborhood').value,
+        city: document.getElementById('edit-p-city').value,
+        bp: document.getElementById('edit-v-bp').value || 'N/I',
+        hr: document.getElementById('edit-v-hr').value || 'N/I',
+        temp: document.getElementById('edit-v-temp').value || 'N/I',
+        o2: document.getElementById('edit-v-o2').value || 'N/I',
+        pain: document.getElementById('edit-v-pain').value || '0',
+        specialty: document.getElementById('edit-v-specialty').value,
+        triage: document.getElementById('edit-v-triage').value,
+        status: editStatus,
+        bedLocation: editStatus === 'INTERNADO' ? document.getElementById('edit-v-bed').value : '',
+        complaint: document.getElementById('edit-v-complaint').value,
+        time: newTime
+      };
+
+      attendances = attendances.filter(a => a.id !== oldId);
+      attendances.unshift(updatedAttendance);
+
+      currentQueuePage = 1;
+      saveState();
+      closeEditModal();
+      showToast('Atendimento gravado e atualizado com sucesso!', '✅');
+      switchTab('fila');
+    }
+
+    function updateStatus(id, newStatus) {
+      const item = attendances.find(a => a.id === id);
+      if (item) {
+        if (newStatus === 'CHAMADO') {
+          item.status = 'AGUARDANDO';
+          saveState();
+          
+          if (channel) {
+            channel.postMessage({ type: 'CALL_PATIENT', patient: item });
+          }
+          
+          showToast(`Paciente ${item.name} foi chamado (mantido em Aguardando)!`, '📢');
+          return;
+        }
+
+        item.status = newStatus;
+        if (newStatus === 'INTERNADO' && !item.bedLocation) {
+          const bedLoc = prompt("Informe o Setor/Leito de Internação:", "Enfermaria - Leito 01");
+          if (bedLoc) item.bedLocation = bedLoc;
+        }
+        saveState();
+        showToast(`Status do paciente alterado para ${newStatus}`, 'ℹ️');
+      }
+    }
+
+    function printSheet(id) {
+      const item = attendances.find(a => a.id === id);
+      if (!item) return;
+
+      const today = new Date();
+      const formattedToday = today.toLocaleDateString('pt-BR');
+
+      document.getElementById('prt-id').innerText = item.id;
+      document.getElementById('prt-date').innerText = formattedToday;
+      document.getElementById('prt-time').innerText = item.time;
+      document.getElementById('prt-name').innerText = item.name;
+      document.getElementById('prt-mother').innerText = item.motherName || 'Não Informado';
+      document.getElementById('prt-father').innerText = item.fatherName || 'Não Informado';
+      document.getElementById('prt-cpf').innerText = item.cpf;
+      document.getElementById('prt-sus').innerText = item.susCard || 'Não Informado';
+      document.getElementById('prt-dob').innerText = formatDateToBR(item.dob);
+      document.getElementById('prt-insurance').innerText = item.insurance;
+      document.getElementById('prt-status').innerText = item.status;
+      
+      const bedRow = document.getElementById('prt-bed-row');
+      if (item.status === 'INTERNADO' && item.bedLocation) {
+        document.getElementById('prt-bed').innerText = item.bedLocation;
+        bedRow.style.display = 'block';
+      } else {
+        bedRow.style.display = 'none';
+      }
+
+      document.getElementById('prt-address').innerText = formatAddress(item);
+      document.getElementById('prt-triage').innerText = item.triage.toUpperCase();
+      document.getElementById('prt-specialty').innerText = item.specialty;
+      document.getElementById('prt-bp').innerText = item.bp;
+      document.getElementById('prt-hr').innerText = item.hr;
+      document.getElementById('prt-temp').innerText = item.temp;
+      document.getElementById('prt-o2').innerText = item.o2;
+      document.getElementById('prt-complaint').innerText = item.complaint;
+
+      window.print();
+    }
+
+    function updateUI() {
+      const isDisplayMode = new URLSearchParams(window.location.search).get('mode') === 'display';
+
+      if (isDisplayMode) {
+        renderDisplayView();
+        return;
+      }
+
+      const todayStr = new Date().toLocaleDateString('sv-SE'); 
+
+      const todayAttendances = attendances.filter(a => {
+        if (!a.timestamp) return false;
+        const itemDateStr = new Date(a.timestamp).toLocaleDateString('sv-SE');
+        return itemDateStr === todayStr;
+      });
+
+      document.getElementById('kpi-total-today').innerText = todayAttendances.length;
+
+      document.getElementById('kpi-waiting').innerText = attendances.filter(a => a.status === 'AGUARDANDO').length;
+      document.getElementById('kpi-in-consult').innerText = attendances.filter(a => a.status === 'EM ATENDIMENTO').length;
+      document.getElementById('kpi-interned').innerText = attendances.filter(a => a.status === 'INTERNADO').length;
+      document.getElementById('kpi-finished').innerText = attendances.filter(a => a.status === 'FINALIZADO').length;
+
+      document.getElementById('queue-badge-count').innerText = attendances.filter(a => a.status === 'AGUARDANDO').length;
+
+      ['vermelho', 'laranja', 'amarelo', 'verde', 'azul'].forEach(color => {
+        document.getElementById(`count-${color}`).innerText = attendances.filter(a => a.triage === color && a.status === 'AGUARDANDO').length;
+      });
+
+      renderDashboardTable();
+      renderQueueTable();
+      renderPatientsTable();
+    }
+
+    function renderDisplayView() {
+      document.body.classList.add('display-mode');
+      document.getElementById('app-view').style.display = 'none';
+      document.getElementById('display-view').style.display = 'block';
+
+      const waitingPatients = attendances
+        .filter(a => a.status === 'AGUARDANDO')
+        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+      const tbody = document.getElementById('display-queue-body');
+      
+      if (waitingPatients.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding: 2rem;">Nenhum paciente aguardando atendimento.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      waitingPatients.forEach(a => {
+        html += `
+          <tr>
+            <td><strong>${a.time}</strong></td>
+            <td><strong>${a.name}</strong></td>
+            <td><span class="badge-triage ${a.triage}">${a.triage.toUpperCase()}</span></td>
+            <td>${a.specialty}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function triggerDisplayCallout(patient) {
+      const callout = document.getElementById('display-callout');
+      if (!callout) return;
+
+      document.getElementById('callout-name').innerText = patient.name;
+      document.getElementById('callout-info').innerText = `${patient.specialty} - POR FAVOR DIRIJA-SE À RECEPÇÃO`;
+      
+      callout.style.display = 'block';
+      setTimeout(() => {
+        callout.style.display = 'none';
+      }, 10000);
+    }
+
+    function renderDashboardTable() {
+      const tbody = document.getElementById('dash-recent-table');
+      const recentList = [...attendances].slice(0, 5);
+
+      if (recentList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Nenhum paciente cadastrado.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      recentList.forEach(a => {
+        let statusBadge = `<span class="badge-status status-aguardando">${a.status}</span>`;
+        if (a.status === 'INTERNADO') {
+          statusBadge = `<span class="badge-status status-internado">🏥 INTERNADO</span> ${a.bedLocation ? `<br><small style="color:var(--text-muted)">${a.bedLocation}</small>` : ''}`;
+        }
+
+        html += `
+          <tr>
+            <td><strong>${a.time}</strong></td>
+            <td>
+              <div><strong>${a.name}</strong></div>
+              <small style="color:var(--text-muted)">Mãe: ${a.motherName || 'N/I'}</small>
+            </td>
+            <td><span class="badge-triage ${a.triage}">${a.triage.toUpperCase()}</span></td>
+            <td>${a.specialty}</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function resetQueuePageAndRender() {
+      currentQueuePage = 1;
+      renderQueueTable();
+    }
+
+    function changeQueuePage(delta) {
+      currentQueuePage += delta;
+      renderQueueTable();
+    }
+
+    function renderQueueTable() {
+      const tbody = document.getElementById('queue-table-body');
+      const query = (document.getElementById('queue-search')?.value || '').toLowerCase();
+
+      const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const filtered = attendances.filter(a => {
+        const isOlderThan30Days = a.timestamp && (now - a.timestamp > THIRTY_DAYS_MS);
+        if (isOlderThan30Days) return false;
+
+        return a.name.toLowerCase().includes(query) || 
+          a.cpf.includes(query) || 
+          (a.susCard && a.susCard.toLowerCase().includes(query)) ||
+          (a.motherName && a.motherName.toLowerCase().includes(query)) ||
+          (a.fatherName && a.fatherName.toLowerCase().includes(query)) ||
+          (a.neighborhood && a.neighborhood.toLowerCase().includes(query)) ||
+          (a.city && a.city.toLowerCase().includes(query)) ||
+          (a.status && a.status.toLowerCase().includes(query));
+      });
+
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+
+      if (currentQueuePage > totalPages) currentQueuePage = totalPages;
+      if (currentQueuePage < 1) currentQueuePage = 1;
+
+      const startIndex = (currentQueuePage - 1) * PAGE_SIZE;
+      const endIndex = Math.min(startIndex + PAGE_SIZE, totalItems);
+      const pageItems = filtered.slice(startIndex, endIndex);
+
+      document.getElementById('queue-pagination-info').innerText = totalItems > 0 
+        ? `Mostrando ${startIndex + 1}-${endIndex} de ${totalItems} registros` 
+        : 'Mostrando 0-0 de 0 registros';
+      document.getElementById('queue-page-num').innerText = `Página ${currentQueuePage} de ${totalPages}`;
+      document.getElementById('queue-prev-btn').disabled = currentQueuePage <= 1;
+      document.getElementById('queue-next-btn').disabled = currentQueuePage >= totalPages;
+
+      if (pageItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Nenhum registro localizado.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      pageItems.forEach(a => {
+        let statusClass = 'status-aguardando';
+        if (a.status === 'CHAMADO') statusClass = 'status-chamado';
+        if (a.status === 'EM ATENDIMENTO') statusClass = 'status-atendimento';
+        if (a.status === 'FINALIZADO') statusClass = 'status-finalizado';
+        if (a.status === 'INTERNADO') statusClass = 'status-internado';
+
+        const statusDisplay = a.status === 'INTERNADO' 
+          ? `<span class="badge-status status-internado">🏥 INTERNADO</span>${a.bedLocation ? `<br><small style="color:var(--text-muted); font-weight:bold;">${a.bedLocation}</small>` : ''}`
+          : `<span class="badge-status ${statusClass}">${a.status}</span>`;
+
+        html += `
+          <tr>
+            <td><span class="badge-triage ${a.triage}">${a.triage.toUpperCase()}</span></td>
+            <td><strong>${a.time}</strong></td>
+            <td>
+              <strong>${a.name}</strong><br>
+              <small style="color:var(--text-muted)">Mãe: ${a.motherName || 'N/I'}${a.fatherName ? ` | Pai: ${a.fatherName}` : ''}<br>CPF: ${a.cpf} | SUS: ${a.susCard || 'N/I'}</small>
+            </td>
+            <td><small style="color:var(--text-muted)">${formatAddress(a)}</small></td>
+            <td>${a.specialty}</td>
+            <td>${statusDisplay}</td>
+            <td style="text-align: right;">
+              <button class="btn btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="openEditModal('${a.id}', false)">✏️ Editar</button>
+              <button class="btn btn-warning" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="updateStatus('${a.id}', 'CHAMADO')">📢 Chamar</button>
+              <button class="btn btn-primary" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="updateStatus('${a.id}', 'EM ATENDIMENTO')">🩺 Atender</button>
+              <button class="btn btn-danger" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="updateStatus('${a.id}', 'INTERNADO')">🏥 Internar</button>
+              <button class="btn btn-success" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="updateStatus('${a.id}', 'FINALIZADO')">✅ Concluir</button>
+              <button class="btn btn-secondary" style="padding:0.35rem 0.6rem; font-size:0.75rem;" onclick="printSheet('${a.id}')">🖨️ Ficha</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function resetPatientsPageAndRender() {
+      currentPatientPage = 1;
+      renderPatientsTable();
+    }
+
+    function changePatientPage(delta) {
+      currentPatientPage += delta;
+      renderPatientsTable();
+    }
+
+    function renderPatientsTable() {
+      const tbody = document.getElementById('patients-table-body');
+      const query = (document.getElementById('patient-search')?.value || '').toLowerCase();
+
+      const filtered = attendances.filter(a => 
+        a.name.toLowerCase().includes(query) || 
+        a.cpf.includes(query) || 
+        (a.susCard && a.susCard.toLowerCase().includes(query)) ||
+        (a.motherName && a.motherName.toLowerCase().includes(query)) ||
+        (a.fatherName && a.fatherName.toLowerCase().includes(query)) ||
+        (a.neighborhood && a.neighborhood.toLowerCase().includes(query)) ||
+        (a.city && a.city.toLowerCase().includes(query)) ||
+        (a.status && a.status.toLowerCase().includes(query)) ||
+        (a.bedLocation && a.bedLocation.toLowerCase().includes(query))
+      );
+
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+
+      if (currentPatientPage > totalPages) currentPatientPage = totalPages;
+      if (currentPatientPage < 1) currentPatientPage = 1;
+
+      const startIndex = (currentPatientPage - 1) * PAGE_SIZE;
+      const endIndex = Math.min(startIndex + PAGE_SIZE, totalItems);
+      const pageItems = filtered.slice(startIndex, endIndex);
+
+      document.getElementById('patient-pagination-info').innerText = totalItems > 0 
+        ? `Mostrando ${startIndex + 1}-${endIndex} de ${totalItems} registros` 
+        : 'Mostrando 0-0 de 0 registros';
+      document.getElementById('patient-page-num').innerText = `Página ${currentPatientPage} de ${totalPages}`;
+      document.getElementById('patient-prev-btn').disabled = currentPatientPage <= 1;
+      document.getElementById('patient-next-btn').disabled = currentPatientPage >= totalPages;
+
+      if (pageItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Nenhum paciente encontrado.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      pageItems.forEach(a => {
+        let situationCell = `<span class="badge-status status-atendimento">${a.status}</span>`;
+        
+        if (a.status === 'INTERNADO') {
+          situationCell = `
+            <span class="badge-status status-internado">🏥 PACIENTE INTERNADO</span>
+            ${a.bedLocation ? `<br><span style="font-size:0.8rem; font-weight:700; color:#9d174d;">📍 ${a.bedLocation}</span>` : ''}
+          `;
+        }
+
+        const motherStr = a.motherName ? `Mãe: ${a.motherName}` : 'Mãe: N/I';
+        const fatherStr = a.fatherName ? `<br>Pai: ${a.fatherName}` : '';
+
+        html += `
+          <tr>
+            <td>
+              <strong>${a.name}</strong><br>
+              <small style="color:var(--text-muted)">Nasc: ${formatDateToBR(a.dob)}</small>
+            </td>
+            <td><small>${motherStr}${fatherStr}</small></td>
+            <td>
+              <small><strong>CPF:</strong> ${a.cpf}<br><strong>SUS:</strong> ${a.susCard || 'N/I'}</small>
+            </td>
+            <td>${situationCell}</td>
+            <td><small style="color:var(--text-muted)">${formatAddress(a)}</small></td>
+            <td>${a.phone || 'N/I'}</td>
+            <td>
+              <button class="btn btn-primary" style="padding: 0.35rem 0.6rem; font-size: 0.75rem;" onclick="openEditModal('${a.id}', true)">
+                🔄 Renovar
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    // Escutadores de Sincronização entre Abas
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'mediflow_attendances') {
+        attendances = JSON.parse(e.newValue || '[]');
+        updateUI();
+      }
+    });
+
+    if (channel) {
+      channel.onmessage = (e) => {
+        if (e.data.type === 'UPDATE') {
+          attendances = JSON.parse(localStorage.getItem('mediflow_attendances')) || [];
+          updateUI();
+        } else if (e.data.type === 'CALL_PATIENT') {
+          triggerDisplayCallout(e.data.patient);
+        }
+      };
+    }
+
+    // Relógio do Painel TV
+    setInterval(() => {
+      const clockEl = document.getElementById('display-clock');
+      if (clockEl) {
+        clockEl.innerText = new Date().toLocaleTimeString();
+      }
+    }, 1000);
+
+    // Initialize Application
+    window.onload = () => {
+      updateUI();
+    };
+  </script>
+</body>
+</html>
